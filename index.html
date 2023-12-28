@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title> JPEG-матрёшка </title>
+	<meta name="description" content="JPEG-матрёшка">
+	<meta name="color-scheme" content="dark light">
+	<link href="data:" rel="icon">
+	<link href="styles.css" rel="stylesheet">
+	<script async src="script.js"></script>
+</head>
+
+<body>
+	<header>
+		<h1>JPEG-матрёшка</h1>
+		<p>This page contains the results of yet another experiment I did on December 28, 2023.</p>
+	</header>
+	<main>
+		<label>Матрёшка-контейнер: </label>
+		<input type="file" id="container-file" />
+		<button class="save">Сохранить матрёшку</button>
+		<div class=matryoshka>
+			<img src=../screenshot.jpg></img>
+			<img src=../screenshot.jpg></img>
+		</div>
+		<label>Вставить матрёшку: </label>
+		<input type="file" id="content-file" />
+	</main>
+	<footer>
+		<p>Made on December 28, 2023.</p>
+	</footer>
+</body>
+
+</html>
