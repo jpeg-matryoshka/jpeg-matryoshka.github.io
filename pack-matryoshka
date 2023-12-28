@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+import sys
+from contextlib import suppress
+from pathlib import Path
+
+
+def main(script_name: str, *script_args: str):
+    for path in map(Path, script_args):
+        matryoshka_path = Path(str(path) + ".jpg")
+        print(f"packing {matryoshka_path}")
+        assert path.is_dir()
+        matryoshka = []
+        for item in sorted(path.iterdir()):
+            jpeg_bytes = item.read_bytes()
+            if jpeg_bytes[0:2].hex() != "ffd8":
+                continue
+            print(f"   from {item}")
+            matryoshka.append(jpeg_bytes)
+        matryoshka_path.write_bytes(b"".join(matryoshka))
+
+
+if __name__ == "__main__":
+    with suppress(KeyboardInterrupt):
+        main(sys.argv[0], *sys.argv[1:])
