@@ -24,7 +24,7 @@ def unpack_matryoshka(jpeg_bytes: bytes):
         else:
             size = 2
         i += size
-        print(f"{marker.upper()!s} {size=}")
+        # print(f"{marker.upper()!s} {size=}")
     yield jpeg_bytes[: i + 2]
     if i + 8 < len(jpeg_bytes):
         yield from unpack_matryoshka(jpeg_bytes[i + 2:])
