@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+import sys
+from contextlib import suppress
+from pathlib import Path
+
+
+def unpack_matryoshka(jpeg_bytes: bytes):
+    # print("unpacking ", id(jpeg_bytes), len(jpeg_bytes))
+    i = 0
+    markers = [*("c0 c1 c2 c4 db da fe".split()), *[f"e{i}" for i in range(10)]]
+    while i < len(jpeg_bytes):
+        marker = jpeg_bytes[i: i + 2].hex()
+        if marker[0:2] != "ff":
+            return
+        elif marker == "ffd9":
+            break
+        elif marker[2:] in markers:
+            size = int.from_bytes(jpeg_bytes[i + 2: i + 4], "big") + 2
+            if marker == "ffda":
+                j = i + size
+                while j + 1 < len(jpeg_bytes) and (jpeg_bytes[j] != 0xFF or jpeg_bytes[j + 1] == 0):
+                    j += 1
+                size = j - i
+        else:
+            size = 2
+        i += size
+        print(f"{marker.upper()!s} {size=}")
+    yield jpeg_bytes[: i + 2]
+    if i + 8 < len(jpeg_bytes):
+        yield from unpack_matryoshka(jpeg_bytes[i + 2:])
+
+
+def main(script_name: str, *script_args: str):
+    for path in map(Path, script_args):
+        print(f"unpacking {path}")
+        matryoshkas = list(unpack_matryoshka(path.read_bytes()))
+        id_length = len(str(len(matryoshkas) + 1))
+        directory = path.with_suffix("" if path.suffix else ".matryoshkas")
+        directory.mkdir(exist_ok=True)
+        for i, matryoshka in enumerate(unpack_matryoshka(path.read_bytes())):
+            new_path = directory / f"{i:0{id_length}}.jpg"
+            print(f"     into {new_path}")
+            new_path.write_bytes(matryoshka)
+
+
+if __name__ == "__main__":
+    with suppress(KeyboardInterrupt):
+        main(sys.argv[0], *sys.argv[1:])
