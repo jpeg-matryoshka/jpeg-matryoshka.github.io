@@ -30,21 +30,24 @@ function unpackContainer() {
 }
 
 function packContainer() {
-	let container = document.getElementById("container-file");
+	let containerElement = document.getElementById("container-file");
 	let content = document.getElementById("content-file");
-	let file1 = container.files[0];
+	let file1 = containerElement.files[0];
 	let file2 = content.files[0];
-	readFile(file1, (array1) => readFile(file2, (array2) => {
-		let new_array1 = concatArrays(array1, array2);
-		let matryoshka = new File([new_array1], file1.name, {
+	readFile(file1, (bigMatryoshka) => readFile(file2, (content) => {
+		let container = new Uint8Array([]);
+		for (let matryoshka of unpackMatryoshka(bigMatryoshka))
+			container = concatArrays(container, matryoshka);
+		container = concatArrays(container, content);
+		let matryoshka = new File([container], file1.name, {
 			type: "image/jpeg",
 			lastModified: new Date(),
 		});
 		const dataTransfer = new DataTransfer();
 		dataTransfer.items.add(matryoshka);
-		container.files = dataTransfer.files;
+		containerElement.files = dataTransfer.files;
 		let event = new Event("change");
-		container.dispatchEvent(event);
+		containerElement.dispatchEvent(event);
 		content.value = "";
 	}));
 
