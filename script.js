@@ -1,17 +1,17 @@
 window.onload = () => {
 	let container = document.getElementById("container-file");
-	container.addEventListener("change", unpackContainer, false);
+	container.addEventListener("change", unpackMatryoshka, false);
 	let content = document.getElementById("content-file");
-	content.addEventListener("change", packContainer, false);
+	content.addEventListener("change", packMatryoshka, false);
 	let saveButton = document.getElementsByClassName("save")[0];
 	saveButton.addEventListener("click", saveMatryoshka, false)
 	if (container.files.length > 0)
-		unpackContainer();
+		unpackMatryoshka();
 	if (content.files.length > 0)
-		packContainer();
+		packMatryoshka();
 }
 
-function unpackContainer() {
+function unpackMatryoshka() {
 	let container = document.getElementById("container-file");
 	let reader = new FileReader();
 	reader.onload = function () {
@@ -19,7 +19,7 @@ function unpackContainer() {
 			array = new Uint8Array(arrayBuffer);
 		let imgs = document.getElementsByClassName("matryoshka")[0];
 		while (imgs.firstChild) imgs.removeChild(imgs.firstChild);
-		for (let matryoshka of unpackMatryoshka(array)) {
+		for (let matryoshka of splitByEoiMarker(array)) {
 			let img = document.createElement("img");
 			let blob = new Blob([matryoshka], { type: "image/jpeg" });
 			img.src = URL.createObjectURL(blob);
@@ -29,14 +29,14 @@ function unpackContainer() {
 	reader.readAsArrayBuffer(container.files[0]);
 }
 
-function packContainer() {
+function packMatryoshka() {
 	let containerElement = document.getElementById("container-file");
-	let content = document.getElementById("content-file");
+	let contentElement = document.getElementById("content-file");
 	let file1 = containerElement.files[0];
-	let file2 = content.files[0];
+	let file2 = contentElement.files[0];
 	readFile(file1, (bigMatryoshka) => readFile(file2, (content) => {
 		let container = new Uint8Array([]);
-		for (let matryoshka of unpackMatryoshka(bigMatryoshka))
+		for (let matryoshka of splitByEoiMarker(bigMatryoshka))
 			container = concatArrays(container, matryoshka);
 		container = concatArrays(container, content);
 		let matryoshka = new File([container], file1.name, {
@@ -48,7 +48,7 @@ function packContainer() {
 		containerElement.files = dataTransfer.files;
 		let event = new Event("change");
 		containerElement.dispatchEvent(event);
-		content.value = "";
+		contentElement.value = "";
 	}));
 
 }
@@ -62,7 +62,7 @@ function saveMatryoshka() {
 	invisibleLink.click();
 }
 
-function* unpackMatryoshka(jpeg_bytes) {
+function* splitByEoiMarker(jpeg_bytes) {
 	let i = 0;
 	const markers = [...("c0 c1 c2 c4 db da fe".split(" ")), ...Array.from({ length: 10 }, (_, i) => `e${i}`)];
 	while (i < jpeg_bytes.length) {
@@ -86,7 +86,7 @@ function* unpackMatryoshka(jpeg_bytes) {
 	}
 	yield jpeg_bytes.slice(0, i + 2);
 	if (i + 8 < jpeg_bytes.length) {
-		yield* unpackMatryoshka(jpeg_bytes.slice(i + 2));
+		yield* splitByEoiMarker(jpeg_bytes.slice(i + 2));
 	}
 }
 
